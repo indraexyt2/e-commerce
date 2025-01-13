@@ -111,3 +111,24 @@ func (api *UserAPI) LoginAdmin(e echo.Context) error {
 
 	return helpers.SendResponseHTTP(e, http.StatusOK, "User logged in successfully", resp)
 }
+
+func (api *UserAPI) GetProfile(e echo.Context) error {
+	var (
+		log = helpers.Logger
+	)
+
+	token := e.Get("token")
+	tokenClaims, ok := token.(*helpers.ClaimToken)
+	if !ok {
+		log.Error("Error getting token claims")
+		return helpers.SendResponseHTTP(e, http.StatusInternalServerError, "Server error", nil)
+	}
+
+	resp, err := api.UserService.GetProfile(e.Request().Context(), tokenClaims.Username)
+	if err != nil {
+		log.Error("Error getting user profile: ", err)
+		return helpers.SendResponseHTTP(e, http.StatusInternalServerError, "Error getting user profile. Please try again", nil)
+	}
+
+	return helpers.SendResponseHTTP(e, http.StatusOK, "User profile retrieved successfully", resp)
+}

@@ -24,6 +24,7 @@ func ServeHTTP() {
 	userV1.POST("/register/admin", d.UserAPI.RegisterAdmin)
 	userV1.POST("/login", d.UserAPI.LoginUser)
 	userV1.POST("/login/admin", d.UserAPI.LoginAdmin)
+	userV1.GET("/profile", d.UserAPI.GetProfile, d.MiddlewareValidateAuth)
 
 	err := e.Start(":" + helpers.GetEnv("PORT"))
 	if err != nil {
@@ -32,9 +33,10 @@ func ServeHTTP() {
 }
 
 type Dependency struct {
-	HealthCheckAPI *api.HealthCheckAPI
+	UserRepository interfaces.IUserRepository
 
-	UserAPI interfaces.IUserAPI
+	HealthCheckAPI *api.HealthCheckAPI
+	UserAPI        interfaces.IUserAPI
 }
 
 func DependencyInject() *Dependency {
@@ -44,6 +46,7 @@ func DependencyInject() *Dependency {
 	userApi := &api.UserAPI{UserService: userSvc}
 
 	return &Dependency{
+		UserRepository: userRepo,
 		HealthCheckAPI: &api.HealthCheckAPI{},
 		UserAPI:        userApi,
 	}

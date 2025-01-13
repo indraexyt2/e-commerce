@@ -77,3 +77,14 @@ func (s *UserService) Login(ctx context.Context, request *models.LoginRequest, r
 	resp.RefreshToken = refreshToken
 	return resp, nil
 }
+
+func (s *UserService) GetProfile(ctx context.Context, username string) (*models.User, error) {
+	resp, err := s.UserRepository.GetUserByUsername(ctx, username, "")
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to get user detail")
+	}
+
+	resp.Password = ""
+	resp.Role = ""
+	return resp, nil
+}
