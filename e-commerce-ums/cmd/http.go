@@ -21,6 +21,7 @@ func ServeHTTP() {
 
 	userV1 := e.Group("/user/v1")
 	userV1.POST("/register", d.UserAPI.RegisterUser)
+	userV1.POST("/register/admin", d.UserAPI.RegisterAdmin)
 
 	err := e.Start(":" + helpers.GetEnv("PORT"))
 	if err != nil {
@@ -31,7 +32,7 @@ func ServeHTTP() {
 type Dependency struct {
 	HealthCheckAPI *api.HealthCheckAPI
 
-	UserAPI interfaces.IuserAPI
+	UserAPI interfaces.IUserAPI
 }
 
 func DependencyInject() *Dependency {

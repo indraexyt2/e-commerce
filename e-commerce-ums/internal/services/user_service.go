@@ -28,3 +28,21 @@ func (s *UserService) RegisterUser(ctx context.Context, req *models.User) (*mode
 	resp.Password = ""
 	return resp, nil
 }
+
+func (s *UserService) RegisterAdmin(ctx context.Context, req *models.User) (*models.User, error) {
+	hashPassword, err := bcrypt.GenerateFromPassword([]byte(req.Password), bcrypt.DefaultCost)
+	if err != nil {
+		return nil, err
+	}
+	req.Password = string(hashPassword)
+	req.Role = "admin"
+
+	err = s.UserRepository.InsertNewUser(ctx, req)
+	if err != nil {
+		return nil, err
+	}
+
+	resp := req
+	resp.Password = ""
+	return resp, nil
+}
