@@ -7,10 +7,10 @@ type Response struct {
 	Data    interface{} `json:"data,omitempty"`
 }
 
-func SendResponseHTTP(e echo.Context, code int, message string, data interface{}) {
+func SendResponseHTTP(e echo.Context, code int, message string, data interface{}) error {
 	resp := Response{
 		Message: message,
 		Data:    data,
 	}
-	e.JSON(code, resp)
+	return e.JSON(code, resp)
 }
