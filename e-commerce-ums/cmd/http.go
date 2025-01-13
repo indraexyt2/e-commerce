@@ -22,6 +22,8 @@ func ServeHTTP() {
 	userV1 := e.Group("/user/v1")
 	userV1.POST("/register", d.UserAPI.RegisterUser)
 	userV1.POST("/register/admin", d.UserAPI.RegisterAdmin)
+	userV1.POST("/login", d.UserAPI.LoginUser)
+	userV1.POST("/login/admin", d.UserAPI.LoginAdmin)
 
 	err := e.Start(":" + helpers.GetEnv("PORT"))
 	if err != nil {
