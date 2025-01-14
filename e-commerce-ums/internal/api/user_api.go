@@ -132,3 +132,25 @@ func (api *UserAPI) GetProfile(e echo.Context) error {
 
 	return helpers.SendResponseHTTP(e, http.StatusOK, "User profile retrieved successfully", resp)
 }
+
+func (api *UserAPI) RefreshToken(e echo.Context) error {
+	var (
+		log = helpers.Logger
+	)
+
+	refreshToken := e.Request().Header.Get("Authorization")
+	claim := e.Get("token")
+	claimsToken, ok := claim.(*helpers.ClaimToken)
+	if !ok {
+		log.Error("Error getting token claims")
+		return helpers.SendResponseHTTP(e, http.StatusInternalServerError, "Server error", nil)
+	}
+
+	resp, err := api.UserService.RefreshToken(e.Request().Context(), refreshToken, claimsToken)
+	if err != nil {
+		log.Error("failed to refresh token: ", err)
+		return helpers.SendResponseHTTP(e, http.StatusInternalServerError, "Error refreshing token. Please try again", nil)
+	}
+
+	return helpers.SendResponseHTTP(e, http.StatusOK, "Token refreshed successfully", resp)
+}

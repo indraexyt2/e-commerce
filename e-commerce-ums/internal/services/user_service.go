@@ -88,3 +88,19 @@ func (s *UserService) GetProfile(ctx context.Context, username string) (*models.
 	resp.Role = ""
 	return resp, nil
 }
+
+func (s *UserService) RefreshToken(ctx context.Context, refreshToken string, claimToken *helpers.ClaimToken) (models.RefreshTokenResponse, error) {
+	resp := models.RefreshTokenResponse{}
+	token, err := helpers.GenerateToken(ctx, claimToken.UserID, claimToken.Username, claimToken.FullName, claimToken.Email, "token", time.Now())
+	if err != nil {
+		return resp, errors.Wrap(err, "failed to generate token")
+	}
+
+	err = s.UserRepository.UpdateTokenByRefreshToken(ctx, token, refreshToken)
+	if err != nil {
+		return resp, errors.Wrap(err, "failed to update token")
+	}
+
+	resp.Token = token
+	return resp, nil
+}
