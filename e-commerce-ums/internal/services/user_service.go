@@ -85,7 +85,6 @@ func (s *UserService) GetProfile(ctx context.Context, username string) (*models.
 	}
 
 	resp.Password = ""
-	resp.Role = ""
 	return resp, nil
 }
 
