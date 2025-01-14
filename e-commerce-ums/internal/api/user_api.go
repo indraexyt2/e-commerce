@@ -154,3 +154,18 @@ func (api *UserAPI) RefreshToken(e echo.Context) error {
 
 	return helpers.SendResponseHTTP(e, http.StatusOK, "Token refreshed successfully", resp)
 }
+
+func (api *UserAPI) Logout(e echo.Context) error {
+	var (
+		log = helpers.Logger
+	)
+
+	token := e.Request().Header.Get("Authorization")
+	err := api.UserService.Logout(e.Request().Context(), token)
+	if err != nil {
+		log.Error("failed to logout: ", err)
+		return helpers.SendResponseHTTP(e, http.StatusInternalServerError, "Error logging out. Please try again", nil)
+	}
+
+	return helpers.SendResponseHTTP(e, http.StatusOK, "User logged out successfully", nil)
+}

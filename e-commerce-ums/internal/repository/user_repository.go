@@ -87,3 +87,7 @@ func (r *UserRepository) UpdateTokenByRefreshToken(ctx context.Context, token st
 		Where("refresh_token =?", refreshToken).
 		Update("token", token).Error
 }
+
+func (r *UserRepository) DeleteUserSession(ctx context.Context, token string) error {
+	return r.DB.WithContext(ctx).Delete(&models.UserSession{}, "token = ?", token).Error
+}

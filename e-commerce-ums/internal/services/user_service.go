@@ -104,3 +104,7 @@ func (s *UserService) RefreshToken(ctx context.Context, refreshToken string, cla
 	resp.Token = token
 	return resp, nil
 }
+
+func (s *UserService) Logout(ctx context.Context, token string) error {
+	return s.UserRepository.DeleteUserSession(ctx, token)
+}
