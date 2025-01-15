@@ -16,7 +16,7 @@ func main() {
 	helpers.SetupDB()
 
 	// setup redis
-	helpers.SetupRedis()
+	//helpers.SetupRedis()
 
 	// setup kafka consumer
 	//cmd.ServeKafkaConsumer()

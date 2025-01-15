@@ -1,0 +1,16 @@
+*2
+$6
+SELECT
+$1
+0
+*5
+$3
+SET
+$19
+ecommerce:product:4
+$237
+{"id":4,"name":"Kaos Polos","description":"Kaos oblong warna warni","price":50000,"categories":[1],"variants":[{"id":7,"product_id":4,"color":"red","size":"M","quantity":10},{"id":8,"product_id":4,"color":"red","size":"S","quantity":5}]}
+$4
+PXAT
+$13
+1736966081408

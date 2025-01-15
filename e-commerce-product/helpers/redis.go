@@ -2,15 +2,22 @@ package helpers
 
 import (
 	"context"
-	"github.com/go-redis/redis/v8"
+	"github.com/redis/go-redis/v9"
 )
 
-var RedisClient *redis.Client
+var RedisClient *redis.ClusterClient
 
 func SetupRedis() {
-	rdb := redis.NewClient(&redis.Options{
-		Addr: GetEnv("REDIS_HOST"),
-		DB:   0,
+
+	rdb := redis.NewClusterClient(&redis.ClusterOptions{
+		Addrs: []string{
+			"127.0.0.1:7000",
+			"127.0.0.1:7001",
+			"127.0.0.1:7002",
+			"127.0.0.1:7003",
+			"127.0.0.1:7004",
+			"127.0.0.1:7005",
+		},
 	})
 
 	result, err := rdb.Ping(context.Background()).Result()
@@ -18,7 +25,6 @@ func SetupRedis() {
 		Logger.Error("Error connecting to redis: ", err)
 		return
 	}
-	RedisClient = rdb
 	Logger.Info("PING REDIS: " + result)
 	RedisClient = rdb
 }
