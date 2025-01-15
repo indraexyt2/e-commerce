@@ -22,9 +22,12 @@ func ServeHTTP() {
 
 	productV1 := e.Group("/product/v1")
 	productV1.POST("", d.ProductAPI.CreateProduct, d.MiddlewareValidateAuth)
+	productV1.PUT("/:id", d.ProductAPI.UpdateProduct, d.MiddlewareValidateAuth)
+	productV1.PUT("/variant/:id", d.ProductAPI.UpdateProductVariant, d.MiddlewareValidateAuth)
 
 	categoryV1 := e.Group("/product/v1/category")
 	categoryV1.POST("", d.CategoryAPI.CreateCategory, d.MiddlewareValidateAuth)
+	categoryV1.PUT("/:id", d.CategoryAPI.UpdateProductCategory, d.MiddlewareValidateAuth)
 
 	err := e.Start(":" + helpers.GetEnv("PORT"))
 	if err != nil {

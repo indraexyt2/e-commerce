@@ -10,6 +10,7 @@ import (
 	"github.com/pkg/errors"
 	"github.com/redis/go-redis/v9"
 	"gorm.io/gorm"
+	"gorm.io/gorm/clause"
 	"time"
 )
 
@@ -51,10 +52,7 @@ func (r *ProductRepository) InsertNewProduct(ctx context.Context, product *model
 			if err != nil {
 				helpers.Logger.Warn("Error deleting key: ", err)
 			}
-			err = r.Redis.Del(ctx, fmt.Sprintf(constants.RedisKeyProductDetail, product.ID)).Err()
-			if err != nil {
-				helpers.Logger.Warn("Error deleting key: ", err)
-			}
+
 			err = r.Redis.Set(ctx, fmt.Sprintf(constants.RedisKeyProductDetail, product.ID), string(jsonData), time.Hour*24).Err()
 			if err != nil {
 				helpers.Logger.Warn("Error setting key: ", err)
@@ -63,4 +61,65 @@ func (r *ProductRepository) InsertNewProduct(ctx context.Context, product *model
 	}
 
 	return err
+}
+
+func (r *ProductRepository) UpdateProduct(ctx context.Context, productID int, newData map[string]interface{}) error {
+	err := r.DB.WithContext(ctx).
+		Clauses(clause.Locking{Strength: "UPDATE"}).
+		Model(&models.Product{}).Where("id = ?", productID).
+		Updates(newData).Error
+
+	if err != nil {
+		return errors.Wrap(err, "failed to update product")
+	}
+
+	go func() {
+		ctx = context.Background()
+
+		err = r.Redis.Del(ctx, constants.RedisKeyProducts).Err()
+		if err != nil {
+			helpers.Logger.Warn("Error deleting key: ", err)
+		}
+
+		err = r.Redis.Del(ctx, fmt.Sprintf(constants.RedisKeyProductDetail, productID)).Err()
+		if err != nil {
+			helpers.Logger.Warn("Error deleting key: ", err)
+		}
+	}()
+
+	return nil
+}
+
+func (r *ProductRepository) UpdateProductVariant(ctx context.Context, variantID int, newData map[string]interface{}) error {
+	err := r.DB.WithContext(ctx).
+		Clauses(clause.Locking{Strength: "UPDATE"}).
+		Model(&models.ProductVariant{}).Where("id = ?", variantID).
+		Updates(newData).Error
+
+	if err != nil {
+		return errors.Wrap(err, "failed to update product")
+	}
+
+	go func() {
+		ctx := context.Background()
+
+		variant := &models.ProductVariant{}
+		err = r.DB.Where("id = ?", variantID).Take(variant).Error
+		if err != nil {
+			helpers.Logger.Warn("Error getting product: ", err)
+			return
+		}
+
+		err = r.Redis.Del(ctx, constants.RedisKeyProducts).Err()
+		if err != nil {
+			helpers.Logger.Warn("Error deleting key: ", err)
+		}
+
+		err = r.Redis.Del(ctx, fmt.Sprintf(constants.RedisKeyProductDetail, variant.ProductID)).Err()
+		if err != nil {
+			helpers.Logger.Warn("Error deleting key: ", err)
+		}
+	}()
+
+	return nil
 }

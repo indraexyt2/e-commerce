@@ -6,6 +6,7 @@ import (
 	"e-commerce-product/internal/models"
 	"github.com/labstack/echo/v4"
 	"net/http"
+	"strconv"
 )
 
 type CategoryAPI struct {
@@ -35,4 +36,31 @@ func (api *CategoryAPI) CreateCategory(e echo.Context) error {
 	}
 
 	return helpers.SendResponseHTTP(e, http.StatusCreated, "Category created successfully", resp)
+}
+
+func (api *CategoryAPI) UpdateProductCategory(e echo.Context) error {
+	var (
+		req           = &models.ProductCategory{}
+		log           = helpers.Logger
+		categoryIDStr = e.Param("id")
+	)
+
+	categoryID, err := strconv.Atoi(categoryIDStr)
+	if err != nil || categoryID == 0 {
+		log.Error("Error parsing category ID: ", err)
+		return helpers.SendResponseHTTP(e, http.StatusBadRequest, "Invalid input. Please check your data and try again", nil)
+	}
+
+	if err := e.Bind(req); err != nil {
+		log.Error("Error binding request: ", err)
+		return helpers.SendResponseHTTP(e, http.StatusBadRequest, "Invalid input. Please check your data and try again", nil)
+	}
+
+	err = api.CategoryService.UpdateCategory(e.Request().Context(), categoryID, req)
+	if err != nil {
+		log.Error("Error creating category: ", err)
+		return helpers.SendResponseHTTP(e, http.StatusInternalServerError, "Error updating category. Please try again", nil)
+	}
+
+	return helpers.SendResponseHTTP(e, http.StatusCreated, "Category updated successfully", nil)
 }

@@ -4,6 +4,7 @@ import (
 	"context"
 	"e-commerce-product/internal/interfaces"
 	"e-commerce-product/internal/models"
+	"encoding/json"
 	"github.com/pkg/errors"
 )
 
@@ -18,4 +19,24 @@ func (s *CategoryService) CreateCategory(ctx context.Context, req *models.Produc
 	}
 	resp := req
 	return resp, nil
+}
+
+func (s *CategoryService) UpdateCategory(ctx context.Context, categoryID int, req *models.ProductCategory) error {
+	jsonReq, err := json.Marshal(req)
+	if err != nil {
+		return errors.Wrap(err, "failed to marshal product")
+	}
+
+	newData := map[string]interface{}{}
+	err = json.Unmarshal(jsonReq, &newData)
+	if err != nil {
+		return errors.Wrap(err, "failed to unmarshal product")
+	}
+
+	err = s.CategoryRepository.UpdateCategory(ctx, categoryID, newData)
+	if err != nil {
+		return errors.Wrap(err, "failed to update category")
+	}
+
+	return nil
 }
