@@ -158,3 +158,66 @@ func (r *ProductRepository) DeleteProduct(ctx context.Context, productID int) er
 
 	return err
 }
+
+func (r *ProductRepository) GetProducts(ctx context.Context, page int, limit int) ([]*models.Product, error) {
+	offset := (page - 1) * limit
+
+	var products []*models.Product
+	productStr, err := r.Redis.Get(ctx, constants.RedisKeyProducts).Result()
+	if err == nil && productStr != "" {
+		var result []*models.Product
+		if err := json.Unmarshal([]byte(productStr), &products); err != nil {
+			helpers.Logger.Warn("Error unmarshalling products: ", err)
+		}
+		if page > 0 && limit > 0 {
+			for i := offset; i < len(products); i++ {
+				if i == offset+limit {
+					break
+				}
+				result = append(result, products[i])
+			}
+		} else {
+			helpers.Logger.Info("Successfully got products from redis")
+			return products, nil
+		}
+		helpers.Logger.Info("Successfully got products from redis")
+		return result, nil
+	}
+
+	sql := r.DB.WithContext(ctx).Preload("ProductVariants")
+	if page > 0 && limit > 0 {
+		sql = sql.Offset(offset).Limit(limit)
+	}
+	err = sql.Find(&products).Error
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to get products")
+	}
+
+	go func() {
+		ctx = context.Background()
+
+		var cacheProducts []*models.Product
+		err := sql.Find(&cacheProducts).Error
+		if err != nil {
+			helpers.Logger.Warn("Error getting products: ", err)
+			return
+		}
+
+		jsonCacheProduct, err := json.Marshal(cacheProducts)
+		if err != nil {
+			helpers.Logger.Warn("Error marshalling products: ", err)
+			return
+		}
+
+		err = r.Redis.Set(ctx, constants.RedisKeyProducts, string(jsonCacheProduct), time.Hour*24).Err()
+		if err != nil {
+			helpers.Logger.Warn("Error setting key: ", err)
+			return
+		}
+
+		helpers.Logger.Info("Successfully set products to redis")
+
+	}()
+
+	return products, nil
+}

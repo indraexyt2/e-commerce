@@ -4,6 +4,7 @@ import (
 	"e-commerce-product/helpers"
 	"e-commerce-product/internal/interfaces"
 	"e-commerce-product/internal/models"
+	"fmt"
 	"github.com/labstack/echo/v4"
 	"net/http"
 	"strconv"
@@ -111,4 +112,35 @@ func (api *ProductAPI) DeleteProduct(e echo.Context) error {
 	}
 
 	return helpers.SendResponseHTTP(e, http.StatusOK, "Product deleted successfully", nil)
+}
+
+func (api *ProductAPI) GetProducts(e echo.Context) error {
+	var (
+		log      = helpers.Logger
+		pageStr  = e.QueryParam("page")
+		limitStr = e.QueryParam("limit")
+	)
+
+	page, err := strconv.Atoi(pageStr)
+	if err != nil && pageStr != "" {
+		log.Error("Error parsing page: ", err)
+		return helpers.SendResponseHTTP(e, http.StatusBadRequest, "Invalid input. Please check your data and try again", nil)
+	}
+
+	limit, err := strconv.Atoi(limitStr)
+	if err != nil && limitStr != "" {
+		log.Error("Error parsing limit: ", err)
+		return helpers.SendResponseHTTP(e, http.StatusBadRequest, "Invalid input. Please check your data and try again", nil)
+	}
+
+	resp, err := api.ProductService.GetProducts(e.Request().Context(), page, limit)
+	if err != nil {
+		log.Error("Error getting products: ", err)
+		return helpers.SendResponseHTTP(e, http.StatusInternalServerError, "Error getting products. Please try again", nil)
+	}
+
+	fmt.Println("response", resp)
+
+	return helpers.SendResponseHTTP(e, http.StatusOK, "Products retrieved successfully", resp)
+
 }

@@ -44,3 +44,7 @@ func (s *CategoryService) UpdateCategory(ctx context.Context, categoryID int, re
 func (s *CategoryService) DeleteCategory(ctx context.Context, categoryID int) error {
 	return s.CategoryRepository.DeleteCategory(ctx, categoryID)
 }
+
+func (s *CategoryService) GetCategories(ctx context.Context) ([]*models.ProductCategory, error) {
+	return s.CategoryRepository.GetCategories(ctx)
+}

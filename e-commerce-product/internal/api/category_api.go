@@ -85,3 +85,17 @@ func (api *CategoryAPI) DeleteCategory(e echo.Context) error {
 
 	return helpers.SendResponseHTTP(e, http.StatusOK, "Category deleted successfully", nil)
 }
+
+func (api *CategoryAPI) GetCategories(e echo.Context) error {
+	var (
+		log = helpers.Logger
+	)
+
+	resp, err := api.CategoryService.GetCategories(e.Request().Context())
+	if err != nil {
+		log.Error("Error getting categories: ", err)
+		return helpers.SendResponseHTTP(e, http.StatusInternalServerError, "Error getting categories. Please try again", nil)
+	}
+
+	return helpers.SendResponseHTTP(e, http.StatusOK, "Categories retrieved successfully", resp)
+}

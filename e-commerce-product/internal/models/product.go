@@ -14,7 +14,7 @@ type Product struct {
 	Categories      pq.Int64Array    `json:"categories,omitempty,omitempty" gorm:"column:categories;type:int[]" validate:"required"`
 	CreatedAt       time.Time        `json:"-"`
 	UpdatedAt       time.Time        `json:"-"`
-	ProductVariants []ProductVariant `json:"variants,omitempty,omitempty" gorm:"-"`
+	ProductVariants []ProductVariant `json:"variants,omitempty,omitempty" gorm:"foreignKey:ProductID"`
 }
 
 func (p *Product) TableName() string {

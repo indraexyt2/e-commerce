@@ -32,3 +32,13 @@ func (r *CategoryRepository) UpdateCategory(ctx context.Context, categoryID int,
 func (r *CategoryRepository) DeleteCategory(ctx context.Context, categoryID int) error {
 	return r.DB.WithContext(ctx).Delete(&models.ProductCategory{}, "id = ?", categoryID).Error
 }
+
+func (r *CategoryRepository) GetCategories(ctx context.Context) ([]*models.ProductCategory, error) {
+	var categories []*models.ProductCategory
+	err := r.DB.WithContext(ctx).Find(&categories).Error
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to get categories")
+	}
+
+	return categories, nil
+}
