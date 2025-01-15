@@ -144,3 +144,24 @@ func (api *ProductAPI) GetProducts(e echo.Context) error {
 	return helpers.SendResponseHTTP(e, http.StatusOK, "Products retrieved successfully", resp)
 
 }
+
+func (api *ProductAPI) GetProductDetail(e echo.Context) error {
+	var (
+		log          = helpers.Logger
+		productIDStr = e.Param("id")
+	)
+
+	productID, err := strconv.Atoi(productIDStr)
+	if err != nil || productID == 0 {
+		log.Error("Error parsing product ID: ", err)
+		return helpers.SendResponseHTTP(e, http.StatusBadRequest, "Invalid input. Please check your data and try again", nil)
+	}
+
+	resp, err := api.ProductService.GetProductDetail(e.Request().Context(), productID)
+	if err != nil {
+		log.Error("Error getting product detail: ", err)
+		return helpers.SendResponseHTTP(e, http.StatusInternalServerError, "Error getting product detail. Please try again", nil)
+	}
+
+	return helpers.SendResponseHTTP(e, http.StatusOK, "Product detail retrieved successfully", resp)
+}

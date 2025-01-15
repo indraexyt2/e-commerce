@@ -12,6 +12,7 @@ type IProductRepository interface {
 	UpdateProductVariant(ctx context.Context, variantID int, newData map[string]interface{}) error
 	DeleteProduct(ctx context.Context, productID int) error
 	GetProducts(ctx context.Context, page int, limit int) ([]*models.Product, error)
+	GetProductDetail(ctx context.Context, productID int) (*models.Product, error)
 }
 
 type IProductService interface {
@@ -20,6 +21,7 @@ type IProductService interface {
 	UpdateProductVariant(ctx context.Context, variantID int, req *models.ProductVariant) error
 	DeleteProduct(ctx context.Context, productID int) error
 	GetProducts(ctx context.Context, page int, limit int) ([]*models.Product, error)
+	GetProductDetail(ctx context.Context, productID int) (*models.Product, error)
 }
 
 type IProductAPI interface {
@@ -28,4 +30,5 @@ type IProductAPI interface {
 	UpdateProductVariant(e echo.Context) error
 	DeleteProduct(e echo.Context) error
 	GetProducts(e echo.Context) error
+	GetProductDetail(e echo.Context) error
 }

@@ -221,3 +221,41 @@ func (r *ProductRepository) GetProducts(ctx context.Context, page int, limit int
 
 	return products, nil
 }
+
+func (r *ProductRepository) GetProductDetail(ctx context.Context, productID int) (*models.Product, error) {
+	product := &models.Product{}
+	productStr, err := r.Redis.Get(ctx, fmt.Sprintf(constants.RedisKeyProductDetail, productID)).Result()
+	if err == nil && productStr != "" {
+		if err := json.Unmarshal([]byte(productStr), product); err != nil {
+			helpers.Logger.Warn("Error unmarshalling product detail: ", err)
+		}
+		helpers.Logger.Info("Successfully got product from redis")
+		return product, nil
+	}
+
+	sql := r.DB.WithContext(ctx).Where("id = ?", productID).Preload("ProductVariants")
+	err = sql.First(product, productID).Error
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to get product detail")
+	}
+
+	go func() {
+		ctx = context.Background()
+
+		jsonCacheProduct, err := json.Marshal(product)
+		if err != nil {
+			helpers.Logger.Warn("Error marshalling product detail: ", err)
+			return
+		}
+
+		err = r.Redis.Set(ctx, fmt.Sprintf(constants.RedisKeyProductDetail, productID), string(jsonCacheProduct), time.Hour*24).Err()
+		if err != nil {
+			helpers.Logger.Warn("Error setting key product: ", err)
+			return
+		}
+
+		helpers.Logger.Info("Successfully set product to redis")
+	}()
+
+	return product, nil
+}

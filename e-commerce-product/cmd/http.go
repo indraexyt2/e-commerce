@@ -26,6 +26,7 @@ func ServeHTTP() {
 	productV1.PUT("/variant/:id", d.ProductAPI.UpdateProductVariant, d.MiddlewareValidateAuth)
 	productV1.DELETE("/:id", d.ProductAPI.DeleteProduct, d.MiddlewareValidateAuth)
 	productV1.GET("/list", d.ProductAPI.GetProducts)
+	productV1.GET("/:id", d.ProductAPI.GetProductDetail)
 
 	categoryV1 := e.Group("/product/v1/category")
 	categoryV1.POST("", d.CategoryAPI.CreateCategory, d.MiddlewareValidateAuth)
