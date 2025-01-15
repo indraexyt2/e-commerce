@@ -40,3 +40,7 @@ func (s *CategoryService) UpdateCategory(ctx context.Context, categoryID int, re
 
 	return nil
 }
+
+func (s *CategoryService) DeleteCategory(ctx context.Context, categoryID int) error {
+	return s.CategoryRepository.DeleteCategory(ctx, categoryID)
+}

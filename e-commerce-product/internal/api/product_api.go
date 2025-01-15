@@ -91,3 +91,24 @@ func (api *ProductAPI) UpdateProductVariant(e echo.Context) error {
 
 	return helpers.SendResponseHTTP(e, http.StatusCreated, "Product variant updated successfully", nil)
 }
+
+func (api *ProductAPI) DeleteProduct(e echo.Context) error {
+	var (
+		log          = helpers.Logger
+		productIDStr = e.Param("id")
+	)
+
+	productID, err := strconv.Atoi(productIDStr)
+	if err != nil || productID == 0 {
+		log.Error("Error parsing product ID: ", err)
+		return helpers.SendResponseHTTP(e, http.StatusBadRequest, "Invalid input. Please check your data and try again", nil)
+	}
+
+	err = api.ProductService.DeleteProduct(e.Request().Context(), productID)
+	if err != nil {
+		log.Error("Error deleting product: ", err)
+		return helpers.SendResponseHTTP(e, http.StatusInternalServerError, "Error deleting product. Please try again", nil)
+	}
+
+	return helpers.SendResponseHTTP(e, http.StatusOK, "Product deleted successfully", nil)
+}

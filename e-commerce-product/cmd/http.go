@@ -24,10 +24,12 @@ func ServeHTTP() {
 	productV1.POST("", d.ProductAPI.CreateProduct, d.MiddlewareValidateAuth)
 	productV1.PUT("/:id", d.ProductAPI.UpdateProduct, d.MiddlewareValidateAuth)
 	productV1.PUT("/variant/:id", d.ProductAPI.UpdateProductVariant, d.MiddlewareValidateAuth)
+	productV1.DELETE("/:id", d.ProductAPI.DeleteProduct, d.MiddlewareValidateAuth)
 
 	categoryV1 := e.Group("/product/v1/category")
 	categoryV1.POST("", d.CategoryAPI.CreateCategory, d.MiddlewareValidateAuth)
 	categoryV1.PUT("/:id", d.CategoryAPI.UpdateProductCategory, d.MiddlewareValidateAuth)
+	categoryV1.DELETE("/:id", d.CategoryAPI.DeleteCategory, d.MiddlewareValidateAuth)
 
 	err := e.Start(":" + helpers.GetEnv("PORT"))
 	if err != nil {

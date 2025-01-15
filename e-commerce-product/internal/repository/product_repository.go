@@ -123,3 +123,38 @@ func (r *ProductRepository) UpdateProductVariant(ctx context.Context, variantID 
 
 	return nil
 }
+
+func (r *ProductRepository) DeleteProduct(ctx context.Context, productID int) error {
+	err := r.DB.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
+		err := tx.Where("id = ?", productID).Delete(&models.Product{}).Error
+		if err != nil {
+			return err
+		}
+
+		err = tx.Where("product_id = ?", productID).Delete(&models.ProductVariant{}).Error
+		if err != nil {
+			return err
+		}
+
+		return nil
+	})
+
+	if err == nil {
+		go func() {
+			ctx := context.Background()
+
+			err = r.Redis.Del(ctx, constants.RedisKeyProducts).Err()
+			if err != nil {
+				helpers.Logger.Warn("Error deleting key: ", err)
+			}
+
+			err = r.Redis.Del(ctx, fmt.Sprintf(constants.RedisKeyProductDetail, productID)).Err()
+			if err != nil {
+				helpers.Logger.Warn("Error deleting key: ", err)
+			}
+
+		}()
+	}
+
+	return err
+}

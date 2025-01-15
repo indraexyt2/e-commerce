@@ -64,3 +64,24 @@ func (api *CategoryAPI) UpdateProductCategory(e echo.Context) error {
 
 	return helpers.SendResponseHTTP(e, http.StatusCreated, "Category updated successfully", nil)
 }
+
+func (api *CategoryAPI) DeleteCategory(e echo.Context) error {
+	var (
+		log           = helpers.Logger
+		categoryIDStr = e.Param("id")
+	)
+
+	categoryID, err := strconv.Atoi(categoryIDStr)
+	if err != nil || categoryID == 0 {
+		log.Error("Error parsing category ID: ", err)
+		return helpers.SendResponseHTTP(e, http.StatusBadRequest, "Invalid input. Please check your data and try again", nil)
+	}
+
+	err = api.CategoryService.DeleteCategory(e.Request().Context(), categoryID)
+	if err != nil {
+		log.Error("Error deleting category: ", err)
+		return helpers.SendResponseHTTP(e, http.StatusInternalServerError, "Error deleting category. Please try again", nil)
+	}
+
+	return helpers.SendResponseHTTP(e, http.StatusOK, "Category deleted successfully", nil)
+}

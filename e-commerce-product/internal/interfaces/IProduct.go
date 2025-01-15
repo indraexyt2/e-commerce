@@ -10,16 +10,19 @@ type IProductRepository interface {
 	InsertNewProduct(ctx context.Context, product *models.Product) error
 	UpdateProduct(ctx context.Context, productID int, newData map[string]interface{}) error
 	UpdateProductVariant(ctx context.Context, variantID int, newData map[string]interface{}) error
+	DeleteProduct(ctx context.Context, productID int) error
 }
 
 type IProductService interface {
 	CreateProduct(ctx context.Context, req *models.Product) (*models.Product, error)
 	UpdateProduct(ctx context.Context, productID int, req *models.Product) error
 	UpdateProductVariant(ctx context.Context, variantID int, req *models.ProductVariant) error
+	DeleteProduct(ctx context.Context, productID int) error
 }
 
 type IProductAPI interface {
 	CreateProduct(e echo.Context) error
 	UpdateProduct(e echo.Context) error
 	UpdateProductVariant(e echo.Context) error
+	DeleteProduct(e echo.Context) error
 }

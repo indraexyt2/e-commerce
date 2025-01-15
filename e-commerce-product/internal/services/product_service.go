@@ -60,3 +60,7 @@ func (s *ProductService) UpdateProductVariant(ctx context.Context, variantID int
 
 	return nil
 }
+
+func (s *ProductService) DeleteProduct(ctx context.Context, productID int) error {
+	return s.ProductRepository.DeleteProduct(ctx, productID)
+}

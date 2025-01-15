@@ -28,3 +28,7 @@ func (r *CategoryRepository) UpdateCategory(ctx context.Context, categoryID int,
 
 	return nil
 }
+
+func (r *CategoryRepository) DeleteCategory(ctx context.Context, categoryID int) error {
+	return r.DB.WithContext(ctx).Delete(&models.ProductCategory{}, "id = ?", categoryID).Error
+}
