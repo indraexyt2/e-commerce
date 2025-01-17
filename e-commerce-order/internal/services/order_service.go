@@ -47,7 +47,7 @@ func (s *OrderService) CreateOrder(ctx context.Context, profile *external.Profil
 	return req, nil
 }
 
-func (s *OrderService) UpdateOrderStatus(ctx context.Context, orderID int, req *models.OrderStatusRequest) error {
+func (s *OrderService) UpdateOrderStatus(ctx context.Context, orderID int, profile *external.Profile, req *models.OrderStatusRequest) error {
 	if !constants.MappingOrderStatus[req.Status] {
 		return fmt.Errorf("invalid status: %v", req.Status)
 	}
@@ -68,6 +68,27 @@ func (s *OrderService) UpdateOrderStatus(ctx context.Context, orderID int, req *
 
 	if !validStatusReq {
 		return fmt.Errorf("invalid status flow, current status: %v, request status: %v", order.Status, req.Status)
+	}
+
+	if req.Status == constants.OrderStatusRefund {
+		if profile.Data.Role != "admin" {
+			return errors.New("only admin can refund order")
+		}
+
+		kafkaPayload := &models.RefundPayload{
+			OrderID: order.ID,
+			AdminID: profile.Data.UserID,
+		}
+
+		jsonPayload, err := json.Marshal(kafkaPayload)
+		if err != nil {
+			return errors.Wrap(err, "failed to marshal kafka payload")
+		}
+
+		err = s.External.ProduceKafkaMessage(ctx, helpers.GetEnv("KAFKA_TOPIC_PAYMENT_REFUND"), jsonPayload)
+		if err != nil {
+			return errors.Wrap(err, "failed to produce kafka message")
+		}
 	}
 
 	return s.OrderRepository.UpdateStatusOrder(ctx, orderID, req.Status)

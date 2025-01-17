@@ -16,7 +16,7 @@ type IOrderRepository interface {
 
 type IOrderService interface {
 	CreateOrder(ctx context.Context, profile *external.Profile, req *models.Order) (*models.Order, error)
-	UpdateOrderStatus(ctx context.Context, orderID int, req *models.OrderStatusRequest) error
+	UpdateOrderStatus(ctx context.Context, orderID int, profile *external.Profile, req *models.OrderStatusRequest) error
 	GetOrderList(ctx context.Context) ([]models.Order, error)
 	GetOrderDetail(ctx context.Context, orderID int) (*models.Order, error)
 }

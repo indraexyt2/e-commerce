@@ -51,6 +51,7 @@ func (api *OrderAPI) UpdateOrderStatus(e echo.Context) error {
 		log        = helpers.Logger
 		req        = &models.OrderStatusRequest{}
 		orderIDStr = e.Param("id")
+		profileCtx = e.Get("profile")
 	)
 
 	orderID, err := strconv.Atoi(orderIDStr)
@@ -69,7 +70,13 @@ func (api *OrderAPI) UpdateOrderStatus(e echo.Context) error {
 		return helpers.SendResponseHTTP(e, http.StatusBadRequest, "Invalid data", nil)
 	}
 
-	err = api.OrderService.UpdateOrderStatus(e.Request().Context(), orderID, req)
+	profile, ok := profileCtx.(*external.Profile)
+	if !ok {
+		log.Error("failed to get profile from context")
+		return helpers.SendResponseHTTP(e, http.StatusInternalServerError, "Server error", nil)
+	}
+
+	err = api.OrderService.UpdateOrderStatus(e.Request().Context(), orderID, profile, req)
 	if err != nil {
 		log.Error("failed to update order status: ", err)
 		return helpers.SendResponseHTTP(e, http.StatusInternalServerError, "Server error", nil)
