@@ -3,8 +3,6 @@ package repository
 import (
 	"context"
 	"e-commerce-order/internal/models"
-	"fmt"
-	"github.com/pkg/errors"
 	"gorm.io/gorm"
 )
 
@@ -19,15 +17,6 @@ func (r *OrderRepository) InsertNewOrder(ctx context.Context, order *models.Orde
 			return err
 		}
 
-		for i, orderItem := range order.OrderItems {
-			orderItem.OrderID = order.ID
-			err := tx.Create(&orderItem).Error
-			if err != nil {
-				return errors.Wrap(err, fmt.Sprintf("failed to create order item %v", orderItem))
-			}
-			order.OrderItems[i].ID = orderItem.ID
-			order.OrderItems[i].OrderID = order.ID
-		}
 		return nil
 	})
 
@@ -36,4 +25,16 @@ func (r *OrderRepository) InsertNewOrder(ctx context.Context, order *models.Orde
 
 func (r *OrderRepository) UpdateStatusOrder(ctx context.Context, orderID int, status string) error {
 	return r.DB.WithContext(ctx).Model(&models.Order{}).Where("id = ?", orderID).Update("status", status).Error
+}
+
+func (r *OrderRepository) GetDetailOrder(ctx context.Context, orderID int) (*models.Order, error) {
+	var (
+		order = &models.Order{}
+		err   error
+	)
+	err = r.DB.WithContext(ctx).Preload("OrderItems").Where("id = ?", orderID).First(order).Error
+	if err != nil {
+		return nil, err
+	}
+	return order, nil
 }

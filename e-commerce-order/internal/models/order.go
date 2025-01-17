@@ -9,7 +9,7 @@ type Order struct {
 	Status     string      `json:"status" gorm:"column:status;type:varchar(10)"`
 	CreatedAt  string      `json:"-"`
 	UpdatedAt  string      `json:"-"`
-	OrderItems []OrderItem `json:"items" gorm:"-"`
+	OrderItems []OrderItem `json:"items" gorm:"foreignKey:OrderID"`
 }
 
 func (o *Order) TableName() string {
@@ -39,4 +39,13 @@ func (oi *OrderItem) TableName() string {
 func (oi *OrderItem) Validate() error {
 	v := validator.New()
 	return v.Struct(oi)
+}
+
+type OrderStatusRequest struct {
+	Status string `json:"status" validate:"required"`
+}
+
+func (o *OrderStatusRequest) Validate() error {
+	v := validator.New()
+	return v.Struct(o)
 }

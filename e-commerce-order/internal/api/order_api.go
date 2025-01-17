@@ -7,6 +7,7 @@ import (
 	"e-commerce-order/internal/models"
 	"github.com/labstack/echo/v4"
 	"net/http"
+	"strconv"
 )
 
 type OrderAPI struct {
@@ -43,4 +44,36 @@ func (api *OrderAPI) CreateOrder(e echo.Context) error {
 	}
 
 	return helpers.SendResponseHTTP(e, http.StatusOK, "Success", resp)
+}
+
+func (api *OrderAPI) UpdateOrderStatus(e echo.Context) error {
+	var (
+		log        = helpers.Logger
+		req        = &models.OrderStatusRequest{}
+		orderIDStr = e.Param("id")
+	)
+
+	orderID, err := strconv.Atoi(orderIDStr)
+	if err != nil {
+		log.Error("failed to convert order id to int: ", err)
+		return helpers.SendResponseHTTP(e, http.StatusBadRequest, "Invalid data", nil)
+	}
+
+	if err := e.Bind(req); err != nil {
+		log.Error("failed to bind request: ", err)
+		return helpers.SendResponseHTTP(e, http.StatusBadRequest, "Invalid data", nil)
+	}
+
+	if err := req.Validate(); err != nil {
+		log.Error("failed to validate request: ", err)
+		return helpers.SendResponseHTTP(e, http.StatusBadRequest, "Invalid data", nil)
+	}
+
+	err = api.OrderService.UpdateOrderStatus(e.Request().Context(), orderID, req)
+	if err != nil {
+		log.Error("failed to update order status: ", err)
+		return helpers.SendResponseHTTP(e, http.StatusInternalServerError, "Server error", nil)
+	}
+
+	return helpers.SendResponseHTTP(e, http.StatusOK, "Success", nil)
 }
