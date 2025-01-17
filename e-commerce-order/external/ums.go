@@ -11,6 +11,7 @@ import (
 type Profile struct {
 	Message string `json:"message"`
 	Data    struct {
+		UserID      int    `json:"id"`
 		Username    string `json:"username"`
 		FullName    string `json:"full_name"`
 		Email       string `json:"email"`
@@ -23,7 +24,7 @@ type Profile struct {
 
 type External struct{}
 
-func (ext *External) GetProfile(ctx context.Context, token string) (*Profile, error) {
+func (e *External) GetProfile(ctx context.Context, token string) (*Profile, error) {
 	url := helpers.GetEnv("UMS_URL") + helpers.GetEnv("UMS_ENDPOINT_PROFILE")
 
 	httpReq, err := http.NewRequest("GET", url, nil)

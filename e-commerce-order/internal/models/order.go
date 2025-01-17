@@ -3,13 +3,13 @@ package models
 import "github.com/go-playground/validator/v10"
 
 type Order struct {
-	ID         int         `json:"id"`
+	ID         int         `json:"id" gorm:"column:id;primary_key;auto_increment"`
 	UserID     int         `json:"user_id"`
 	TotalPrice float64     `json:"total_price" gorm:"column:total_price;type:decimal(10,2)" validate:"required"`
-	Status     string      `json:"status" gorm:"column:status;type:varchar(10)" validate:"required"`
+	Status     string      `json:"status" gorm:"column:status;type:varchar(10)"`
 	CreatedAt  string      `json:"-"`
 	UpdatedAt  string      `json:"-"`
-	OrderItems []OrderItem `json:"order_items" gorm:"foreignKey:OrderID"`
+	OrderItems []OrderItem `json:"items" gorm:"-"`
 }
 
 func (o *Order) TableName() string {
@@ -22,7 +22,7 @@ func (o *Order) Validate() error {
 }
 
 type OrderItem struct {
-	ID        int     `json:"id"`
+	ID        int     `json:"id" gorm:"column:id;primary_key;auto_increment"`
 	OrderID   int     `json:"order_id"`
 	ProductID int     `json:"product_id" validate:"required"`
 	VariantID int     `json:"variant_id" validate:"required"`
