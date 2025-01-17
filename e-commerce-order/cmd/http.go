@@ -22,7 +22,8 @@ func ServeHTTP() {
 
 	orderV1 := e.Group("/order/v1")
 	orderV1.POST("", d.OrderAPI.CreateOrder, d.MiddlewareValidateAuth)
-	orderV1.PUT("/:id/status", d.OrderAPI.UpdateOrderStatus, d.MiddlewareValidateAuth)
+	orderV1.GET("/:id", d.OrderAPI.GetOrderDetail, d.MiddlewareValidateAuth)
+	orderV1.GET("", d.OrderAPI.GetOrderList, d.MiddlewareValidateAuth)
 
 	err := e.Start(":" + helpers.GetEnv("PORT"))
 	if err != nil {

@@ -38,3 +38,15 @@ func (r *OrderRepository) GetDetailOrder(ctx context.Context, orderID int) (*mod
 	}
 	return order, nil
 }
+
+func (r *OrderRepository) GetOrder(ctx context.Context) ([]models.Order, error) {
+	var (
+		order []models.Order
+		err   error
+	)
+	err = r.DB.WithContext(ctx).Model(&models.Order{}).Preload("OrderItems").Order("id DESC").Find(&order).Error
+	if err != nil {
+		return nil, err
+	}
+	return order, nil
+}

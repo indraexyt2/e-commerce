@@ -77,3 +77,38 @@ func (api *OrderAPI) UpdateOrderStatus(e echo.Context) error {
 
 	return helpers.SendResponseHTTP(e, http.StatusOK, "Success", nil)
 }
+
+func (api *OrderAPI) GetOrderDetail(e echo.Context) error {
+	var (
+		log        = helpers.Logger
+		orderIDStr = e.Param("id")
+	)
+
+	orderID, err := strconv.Atoi(orderIDStr)
+	if err != nil {
+		log.Error("failed to convert order id to int: ", err)
+		return helpers.SendResponseHTTP(e, http.StatusBadRequest, "Invalid data", nil)
+	}
+
+	resp, err := api.OrderService.GetOrderDetail(e.Request().Context(), orderID)
+	if err != nil {
+		log.Error("failed to get order detail: ", err)
+		return helpers.SendResponseHTTP(e, http.StatusInternalServerError, "Server error", nil)
+	}
+
+	return helpers.SendResponseHTTP(e, http.StatusOK, "Success", resp)
+}
+
+func (api *OrderAPI) GetOrderList(e echo.Context) error {
+	var (
+		log = helpers.Logger
+	)
+
+	resp, err := api.OrderService.GetOrderList(e.Request().Context())
+	if err != nil {
+		log.Error("failed to get order list: ", err)
+		return helpers.SendResponseHTTP(e, http.StatusInternalServerError, "Server error", nil)
+	}
+
+	return helpers.SendResponseHTTP(e, http.StatusOK, "Success", resp)
+}
