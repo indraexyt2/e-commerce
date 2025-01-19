@@ -38,6 +38,7 @@ func (pt *PaymentTransaction) Validate() error {
 
 type PaymentMethod struct {
 	ID         int       `json:"id"`
+	UserID     int       `json:"user_id"`
 	SourceID   int       `json:"source_id"`
 	SourceName string    `json:"source_name" gorm:"column:source_name;type:varchar(50)"`
 	CreatedAt  time.Time `json:"-"`
@@ -51,4 +52,23 @@ func (pm *PaymentMethod) TableName() string {
 func (pm *PaymentMethod) Validate() error {
 	v := validator.New()
 	return v.Struct(pm)
+}
+
+type PaymentMethodLink struct {
+	SourceID int `json:"source_id" validate:"required"`
+}
+
+func (pml *PaymentMethodLink) Validate() error {
+	v := validator.New()
+	return v.Struct(pml)
+}
+
+type PaymentMethodLinkConfirm struct {
+	OTP      string `json:"otp" validate:"required"`
+	SourceID int    `json:"source_id" validate:"required"`
+}
+
+func (pmc *PaymentMethodLinkConfirm) Validate() error {
+	v := validator.New()
+	return v.Struct(pmc)
 }
