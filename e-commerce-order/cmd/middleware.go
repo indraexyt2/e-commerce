@@ -19,7 +19,7 @@ func (d *Dependency) MiddlewareValidateAuth(next echo.HandlerFunc) echo.HandlerF
 		}
 
 		profile, err := d.External.GetProfile(e.Request().Context(), auth)
-		if err != nil || profile == nil {
+		if err != nil {
 			log.Error("failed to get profile: ", err)
 			return helpers.SendResponseHTTP(e, http.StatusUnauthorized, "unauthorized", nil)
 		}

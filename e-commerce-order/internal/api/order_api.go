@@ -72,8 +72,8 @@ func (api *OrderAPI) UpdateOrderStatus(e echo.Context) error {
 
 	profile, ok := profileCtx.(*external.Profile)
 	if !ok {
-		log.Error("failed to get profile from context")
-		return helpers.SendResponseHTTP(e, http.StatusInternalServerError, "Server error", nil)
+		log.Warn("failed to get profile from context")
+		profile = &external.Profile{}
 	}
 
 	err = api.OrderService.UpdateOrderStatus(e.Request().Context(), orderID, profile, req)
