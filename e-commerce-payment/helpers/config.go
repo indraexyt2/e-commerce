@@ -1,6 +1,7 @@
 package helpers
 
 import (
+	"fmt"
 	"github.com/joho/godotenv"
 )
 
@@ -11,9 +12,7 @@ var (
 
 func SetupConfig() {
 	EnvMap, err = godotenv.Read(".env")
-	if err != nil {
-		Logger.Error("Error loading .env file: ", err)
-	}
+	fmt.Printf("Error loading .env file: %v\n", err)
 }
 
 func GetEnv(key string) string {

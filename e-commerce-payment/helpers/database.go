@@ -23,6 +23,6 @@ func SetupDB() {
 		Logger.Error("Error connecting to database: ", err)
 		return
 	}
-	DB.AutoMigrate(&models.PaymentTransaction{}, &models.PaymentMethod{})
+	DB.AutoMigrate(&models.PaymentTransaction{}, &models.PaymentMethod{}, &models.PaymentRefund{})
 	Logger.Info("Connected to database")
 }

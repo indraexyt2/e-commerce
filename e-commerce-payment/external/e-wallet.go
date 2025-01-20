@@ -24,6 +24,20 @@ type PaymentLinkResponse struct {
 	} `json:"data"`
 }
 
+type PaymentTransactionRequest struct {
+	WalletID        int     `json:"wallet_id"`
+	Amount          float64 `json:"amount"`
+	Reference       string  `json:"reference"`
+	TransactionType string  `json:"transaction_type"`
+}
+
+type PaymentTransactionResponse struct {
+	Message string `json:"message"`
+	Data    struct {
+		Balance float64 `json:"balance"`
+	} `json:"data"`
+}
+
 func (e *External) generateSignature(ctx context.Context, payload, timestamp, endpoint string) string {
 	re := regexp.MustCompile(`[^a-zA-Z0-9]+`)
 	payload = re.ReplaceAllString(payload, "")
@@ -144,6 +158,46 @@ func (e *External) PaymentLinkConfirmation(ctx context.Context, sourceID int, ot
 	}
 
 	response := &PaymentLinkResponse{}
+	err = json.NewDecoder(httpRes.Body).Decode(response)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to decode response")
+	}
+
+	return response, nil
+}
+
+func (e *External) WalletTransaction(ctx context.Context, req *PaymentTransactionRequest) (*PaymentTransactionResponse, error) {
+	url := helpers.GetEnv("WALLET_URL") + helpers.GetEnv("WALLET_ENDPOINT_PAYMENT_TRANSACTION")
+
+	bytePayload, err := json.Marshal(req)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to marshal payload")
+	}
+	httpReq, err := http.NewRequest("POST", url, bytes.NewBuffer(bytePayload))
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to create request")
+	}
+
+	timestamp := time.Now().Format(time.RFC3339)
+	signature := e.generateSignature(ctx, string(bytePayload), timestamp, helpers.GetEnv("WALLET_ENDPOINT_PAYMENT_TRANSACTION"))
+
+	httpReq.Header.Set("Client-ID", helpers.GetEnv("WALLET_CLIENT_ID"))
+	httpReq.Header.Set("Timestamp", timestamp)
+	httpReq.Header.Set("Signature", signature)
+
+	fmt.Println("timestamp: ", timestamp)
+
+	client := &http.Client{}
+	httpRes, err := client.Do(httpReq)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to do request")
+	}
+
+	if httpRes.StatusCode != http.StatusOK {
+		return nil, errors.New("failed to add transaction")
+	}
+
+	response := &PaymentTransactionResponse{}
 	err = json.NewDecoder(httpRes.Body).Decode(response)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to decode response")

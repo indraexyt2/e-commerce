@@ -1,11 +1,14 @@
 package api
 
 import (
+	"context"
 	"e-commerce-payment/external"
 	"e-commerce-payment/helpers"
 	"e-commerce-payment/internal/interfaces"
 	"e-commerce-payment/internal/models"
+	"encoding/json"
 	"github.com/labstack/echo/v4"
+	"github.com/pkg/errors"
 	"net/http"
 )
 
@@ -100,4 +103,32 @@ func (api *PaymentAPI) PaymentMethodUnlink(e echo.Context) error {
 	}
 
 	return helpers.SendResponseHTTP(e, http.StatusOK, "Payment method unlinked successfully", nil)
+}
+
+func (api *PaymentAPI) InitiatePayment(kafkaPayload []byte) error {
+	var (
+		log = helpers.Logger
+		req = &models.PaymentInitiatePayload{}
+	)
+
+	if err := json.Unmarshal(kafkaPayload, &req); err != nil {
+		log.Error("failed to unmarshal kafka payload: ", err)
+		return errors.Wrap(err, "failed to unmarshal kafka payload")
+	}
+
+	return api.PaymentService.InitiatePayment(context.Background(), req)
+}
+
+func (api *PaymentAPI) RefundPayment(kafkaPayload []byte) error {
+	var (
+		log = helpers.Logger
+		req = &models.RefundPayload{}
+	)
+
+	if err := json.Unmarshal(kafkaPayload, &req); err != nil {
+		log.Error("failed to unmarshal kafka payload: ", err)
+		return errors.Wrap(err, "failed to unmarshal kafka payload")
+	}
+
+	return api.PaymentService.RefundPayment(context.Background(), req)
 }

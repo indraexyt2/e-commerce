@@ -8,11 +8,13 @@ import (
 )
 
 func ServeKafkaConsumerPaymentInit() {
+	d := DependencyInject()
 	brokers := strings.Split(helpers.GetEnv("KAFKA_HOST"), ",")
 	topic := helpers.GetEnv("KAFKA_TOPIC_PAYMENT_INITIATE")
 
 	config := sarama.NewConfig()
 	config.Consumer.Return.Errors = true
+	config.Consumer.Offsets.AutoCommit.Enable = true
 
 	consumer, err := sarama.NewConsumer(brokers, config)
 	if err != nil {
@@ -32,17 +34,23 @@ func ServeKafkaConsumerPaymentInit() {
 
 			for msg := range partitionConsumer.Messages() {
 				helpers.Logger.Info("Received message payment initiate consumer: ", string(msg.Value))
+				err := d.PaymentAPI.InitiatePayment(msg.Value)
+				if err != nil {
+					helpers.Logger.Error("Error consuming Kafka partition: ", err)
+				}
 			}
 		}()
 	}
 }
 
 func ServeKafkaConsumerRefund() {
+	d := DependencyInject()
 	brokers := strings.Split(helpers.GetEnv("KAFKA_HOST"), ",")
 	topic := helpers.GetEnv("KAFKA_TOPIC_PAYMENT_REFUND")
 
 	config := sarama.NewConfig()
 	config.Consumer.Return.Errors = true
+	config.Consumer.Offsets.AutoCommit.Enable = true
 
 	consumer, err := sarama.NewConsumer(brokers, config)
 	if err != nil {
@@ -61,7 +69,11 @@ func ServeKafkaConsumerRefund() {
 			}
 
 			for msg := range partitionConsumer.Messages() {
-				helpers.Logger.Info("Received message refund consumer: ", string(msg.Value))
+				helpers.Logger.Info("Received message payment refund consumer: ", string(msg.Value))
+				err := d.PaymentAPI.RefundPayment(msg.Value)
+				if err != nil {
+					helpers.Logger.Error("Error consuming Kafka partition: ", err)
+				}
 			}
 		}()
 	}
