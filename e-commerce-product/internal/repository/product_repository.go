@@ -26,16 +26,6 @@ func (r *ProductRepository) InsertNewProduct(ctx context.Context, product *model
 			return err
 		}
 
-		for i, variant := range product.ProductVariants {
-			variant.ProductID = product.ID
-			err := tx.Create(&variant).Error
-			if err != nil {
-				return errors.Wrap(err, fmt.Sprintf("failed to create product variant %v", variant))
-			}
-
-			product.ProductVariants[i].ID = variant.ID
-			product.ProductVariants[i].ProductID = product.ID
-		}
 		return nil
 	})
 
@@ -159,13 +149,13 @@ func (r *ProductRepository) DeleteProduct(ctx context.Context, productID int) er
 	return err
 }
 
-func (r *ProductRepository) GetProducts(ctx context.Context, page int, limit int) ([]*models.Product, error) {
+func (r *ProductRepository) GetProducts(ctx context.Context, page int, limit int) ([]models.Product, error) {
 	offset := (page - 1) * limit
 
-	var products []*models.Product
+	products := []models.Product{}
 	productStr, err := r.Redis.Get(ctx, constants.RedisKeyProducts).Result()
 	if err == nil && productStr != "" {
-		var result []*models.Product
+		var result []models.Product
 		if err := json.Unmarshal([]byte(productStr), &products); err != nil {
 			helpers.Logger.Warn("Error unmarshalling products: ", err)
 		}
@@ -196,10 +186,10 @@ func (r *ProductRepository) GetProducts(ctx context.Context, page int, limit int
 	go func() {
 		ctx = context.Background()
 
-		var cacheProducts []*models.Product
-		err := sql.Find(&cacheProducts).Error
+		cacheProducts := []models.Product{}
+		err = r.DB.Find(&cacheProducts).Error
 		if err != nil {
-			helpers.Logger.Warn("Error getting products: ", err)
+			helpers.Logger.Warn("Error getting products for saving to redis: ", err)
 			return
 		}
 

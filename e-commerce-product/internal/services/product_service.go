@@ -65,7 +65,7 @@ func (s *ProductService) DeleteProduct(ctx context.Context, productID int) error
 	return s.ProductRepository.DeleteProduct(ctx, productID)
 }
 
-func (s *ProductService) GetProducts(ctx context.Context, page int, limit int) ([]*models.Product, error) {
+func (s *ProductService) GetProducts(ctx context.Context, page int, limit int) ([]models.Product, error) {
 	return s.ProductRepository.GetProducts(ctx, page, limit)
 }
 
