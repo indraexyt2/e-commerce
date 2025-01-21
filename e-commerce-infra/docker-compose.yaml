@@ -1,70 +1,247 @@
-version: '3'
+version: '3.8'
+
+networks:
+  e-commerce:
+    driver: bridge
+  redis_network:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.38.0.0/16
+          gateway: 172.38.0.1
+
 services:
+  e-commerce-ums:
+    build: ../e-commerce-ums
+    image: e-commerce-ums:1.0.0
+    restart: always
+    container_name: e-commerce-ums
+    ports:
+      - "9000:9000"
+    depends_on:
+      - postgres
+    networks:
+      - e-commerce
+
+  e-commerce-product:
+    build: ../e-commerce-product
+    image: e-commerce-product:1.0.0
+    container_name: e-commerce-product
+    ports:
+      - 9001:9001
+    depends_on:
+      - postgres
+      - redis-1
+      - redis-2
+      - redis-3
+      - redis-4
+      - redis-5
+      - redis-6
+    networks:
+      - e-commerce
+      - redis_network
+
+  e-commerce-order:
+    build: ../e-commerce-order
+    image: e-commerce-order:1.0.0
+    container_name: e-commerce-order
+    ports:
+      - 9002:9002
+    depends_on:
+      - postgres
+      - kafka1
+      - kafka2
+      - kafka3
+    networks:
+      - e-commerce
+
+  e-commerce-payment:
+    build: ../e-commerce-payment
+    image: e-commerce-payment:1.0.0
+    container_name: e-commerce-payment
+    ports:
+      - 9003:9003
+    depends_on:
+      - postgres
+      - kafka1
+      - kafka2
+      - kafka3
+    networks:
+      - e-commerce
+
+  redis-1:
+    image: redis
+    container_name: redis-1
+    command: [ "redis-server","/usr/local/etc/redis/redis.conf" ]
+    volumes:
+      - ./redis/node-1/data:/data
+      - ./redis/node-1/conf/redis.conf:/usr/local/etc/redis/redis.conf
+    ports:
+      - 6371:6379
+      - 16371:16379
+    networks:
+      redis_network:
+        ipv4_address: 172.38.0.11
+  redis-2:
+    image: redis
+    container_name: redis-2
+    command: [ "redis-server", "/usr/local/etc/redis/redis.conf" ]
+    volumes:
+      - ./redis/node-2/data:/data
+      - ./redis/node-2/conf/redis.conf:/usr/local/etc/redis/redis.conf
+    ports:
+      - "6372:6379"
+      - 16372:16379
+    networks:
+      redis_network:
+        ipv4_address: 172.38.0.12
+
+  redis-3:
+    image: redis
+    container_name: redis-3
+    command: [ "redis-server", "/usr/local/etc/redis/redis.conf" ]
+    volumes:
+      - ./redis/node-3/data:/data
+      - ./redis/node-3/conf/redis.conf:/usr/local/etc/redis/redis.conf
+    ports:
+      - "6373:6379"
+      - 16373:16379
+    networks:
+      redis_network:
+        ipv4_address: 172.38.0.13
+
+  redis-4:
+    image: redis
+    container_name: redis-4
+    command: [ "redis-server", "/usr/local/etc/redis/redis.conf" ]
+    volumes:
+      - ./redis/node-4/data:/data
+      - ./redis/node-4/conf/redis.conf:/usr/local/etc/redis/redis.conf
+    ports:
+      - "6374:6379"
+      - 16374:16379
+    networks:
+      redis_network:
+        ipv4_address: 172.38.0.14
+
+  redis-5:
+    image: redis
+    container_name: redis-5
+    command: [ "redis-server", "/usr/local/etc/redis/redis.conf" ]
+    volumes:
+      - ./redis/node-5/data:/data
+      - ./redis/node-5/conf/redis.conf:/usr/local/etc/redis/redis.conf
+    ports:
+      - "6375:6379"
+      - 16375:16379
+    networks:
+      redis_network:
+        ipv4_address: 172.38.0.15
+
+  redis-6:
+    image: redis
+    container_name: redis-6
+    command: [ "redis-server", "/usr/local/etc/redis/redis.conf" ]
+    volumes:
+      - ./redis/node-6/data:/data
+      - ./redis/node-6/conf/redis.conf:/usr/local/etc/redis/redis.conf
+    ports:
+      - "6376:6379"
+      - "16376:16379"
+    networks:
+      redis_network:
+        ipv4_address: 172.38.0.16
+
+  redis-insight:
+    image: redislabs/redisinsight:latest
+    container_name: redis-insight
+    ports:
+      - "5540:5540"
+    volumes:
+      - redisinsight:/db
+    depends_on:
+      - redis-1
+      - redis-2
+      - redis-3
+      - redis-4
+      - redis-5
+      - redis-6
+    networks:
+      - redis_network
+
   zookeeper:
-    image: bitnami/zookeeper:latest
-    # to survive the container restart
+    image: bitnami/zookeeper:3.9.1
+    container_name: zookeeper
     tmpfs: "/zktmp"
     environment:
       ALLOW_ANONYMOUS_LOGIN: 'yes'
     ports:
       - "2181:2181"
+    networks:
+      - e-commerce
 
   kafka1:
-    image: bitnami/kafka:latest
+    image: bitnami/kafka:3.7.0
+    container_name: kafka1
     depends_on:
       - zookeeper
     environment:
       KAFKA_BROKER_ID: 1
       KAFKA_CFG_ZOOKEEPER_CONNECT: zookeeper:2181
       KAFKA_CFG_LISTENERS: PLAINTEXT://:9092,EXTERNAL://0.0.0.0:29092
-      KAFKA_CFG_ADVERTISED_LISTENERS: PLAINTEXT://kafka1:9092,EXTERNAL://localhost:29092
+      KAFKA_CFG_ADVERTISED_LISTENERS: PLAINTEXT://kafka1:9092,EXTERNAL://host.docker.internal:29092
       KAFKA_CFG_LISTENER_SECURITY_PROTOCOL_MAP: EXTERNAL:PLAINTEXT,PLAINTEXT:PLAINTEXT
-      # optional - enable topic auto create
       KAFKA_CFG_AUTO_CREATE_TOPICS_ENABLE: 'true'
       ALLOW_PLAINTEXT_LISTENER: 'yes'
     ports:
       - "9092:9092"
       - "29092:29092"
     volumes:
-      - kafka_data1:/bitnami/kafka
+      - kafka_data_1:/bitnami/kafka
+    networks:
+      - e-commerce
 
   kafka2:
-    image: bitnami/kafka:latest
+    image: bitnami/kafka:3.7.0
+    container_name: kafka2
     depends_on:
       - zookeeper
     environment:
       KAFKA_BROKER_ID: 2
       KAFKA_CFG_ZOOKEEPER_CONNECT: zookeeper:2181
       KAFKA_CFG_LISTENERS: PLAINTEXT://:9093,EXTERNAL://0.0.0.0:29093
-      KAFKA_CFG_ADVERTISED_LISTENERS: PLAINTEXT://kafka2:9093,EXTERNAL://localhost:29093
+      KAFKA_CFG_ADVERTISED_LISTENERS: PLAINTEXT://kafka2:9093,EXTERNAL://host.docker.internal:29093
       KAFKA_CFG_LISTENER_SECURITY_PROTOCOL_MAP: EXTERNAL:PLAINTEXT,PLAINTEXT:PLAINTEXT
-      # optional - enable topic auto create
       KAFKA_CFG_AUTO_CREATE_TOPICS_ENABLE: 'true'
       ALLOW_PLAINTEXT_LISTENER: 'yes'
     ports:
       - "9093:9093"
       - "29093:29093"
     volumes:
-      - kafka_data2:/bitnami/kafka
+      - kafka_data_2:/bitnami/kafka
+    networks:
+      - e-commerce
 
   kafka3:
-    image: bitnami/kafka:latest
+    image: bitnami/kafka:3.7.0
+    container_name: kafka3
     depends_on:
       - zookeeper
     environment:
       KAFKA_BROKER_ID: 3
       KAFKA_CFG_ZOOKEEPER_CONNECT: zookeeper:2181
       KAFKA_CFG_LISTENERS: PLAINTEXT://:9094,EXTERNAL://0.0.0.0:29094
-      KAFKA_CFG_ADVERTISED_LISTENERS: PLAINTEXT://kafka3:9094,EXTERNAL://localhost:29094
+      KAFKA_CFG_ADVERTISED_LISTENERS: PLAINTEXT://kafka3:9094,EXTERNAL://host.docker.internal:29094
       KAFKA_CFG_LISTENER_SECURITY_PROTOCOL_MAP: EXTERNAL:PLAINTEXT,PLAINTEXT:PLAINTEXT
-      # optional - enable topic auto create
       KAFKA_CFG_AUTO_CREATE_TOPICS_ENABLE: 'true'
       ALLOW_PLAINTEXT_LISTENER: 'yes'
     ports:
       - "9094:9094"
       - "29094:29094"
     volumes:
-      - kafka_data3:/bitnami/kafka
+      - kafka_data_3:/bitnami/kafka
+    networks:
+      - e-commerce
 
   kafka-ui:
     image: provectuslabs/kafka-ui:latest
@@ -73,16 +250,43 @@ services:
       - kafka2
       - kafka3
     ports:
-      - "8080:8080"
+      - "8082:8080"
     environment:
       KAFKA_CLUSTERS_0_NAME: local
       KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: kafka1:9092,kafka2:9093,kafka3:9094
       KAFKA_CLUSTERS_0_ZOOKEEPER: zookeeper:2181
+    networks:
+      - e-commerce
+
+  postgres:
+    image: postgres:16-alpine
+    restart: always
+    container_name: postgres
+    ports:
+      - "5432:5432"
+    volumes:
+      - ./database/multiple-database.sh:/docker-entrypoint-initdb.d/multiple-database.sh
+    env_file:
+      - ./database/.env
+    networks:
+      - e-commerce
+
+  adminer:
+    image: adminer
+    restart: always
+    ports:
+      - 8080:8080
+    depends_on:
+      - postgres
+    networks:
+      - e-commerce
 
 volumes:
-  kafka_data1:
+  redisinsight:
+    name: redisinsight
+  kafka_data_1:
     driver: local
-  kafka_data2:
+  kafka_data_2:
     driver: local
-  kafka_data3:
+  kafka_data_3:
     driver: local
